@@ -9,6 +9,8 @@
         public object? Result3 { get; set; }
         public object? Result4 { get; set; }
         public object? Result5 { get; set; }
-        
+        public string redirection_url { get; set; } 
+
+
     }
 }

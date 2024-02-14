@@ -1,8 +1,200 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    Layout = null;
 }
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SearchableDesign</title>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/site.js"></script>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+    <script src="~/js/vuejs/vue.js"></script>
+    <script src="~/js/vuejs/vue.min.js"></script>
+    <script src="~/js/vuejs/vuejs_paginate.js"></script>
+    <script src="~/js/vuejs/vue-resource.min.js"></script>
+
+    <script src="~/js/custom/customerscript.js"></script>
+    <link href="~/js/custom/blockui.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="~/css/general.css" rel="stylesheet" />
+    <link href="~/css/bootstrap.css" rel="stylesheet" />
+    <link href="~/css/bootstrap.min.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link href="~/css/customnavigation.css" rel="stylesheet" />
+    <script src="~/notification/jquery.growl.js"></script>
+    <link href="~/js/jquery.growl.css" rel="stylesheet" />
+    <script type="text/javascript">
+        function success(message) {
+            $.growl.notice({ message: message, duration: 2000, size: 'large' });
+        }
+        function error_msg(error) {
+            $.growl.error({ message: error, duration: 2000, size: 'large' });
+        }
+        function warning(error) {
+            $.growl.warning({ message: error, duration: 2000, size: 'large' });
+        }
+        function getReturnURL() {
+            var name = "ReturnURL";
+            var url = window.location.href.toLowerCase();
+            name = name.replace(/[\[\]]/g, '\\$&').toLowerCase();
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+      
+    </script>
+    <style>
+        .login-form .avatar {
+            color: #fff;
+            margin: 0 auto 30px;
+            text-align: center;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            z-index: 9;
+            background: #4aba70;
+            padding: 15px;
+            box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .login_icon {
+            font-weight: normal;
+            font-style: normal;
+            font-size: 50px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .login-form {
+            width: 350px;
+            margin: 0 auto;
+            padding: 30px 0;
+        }
+
+            .login-form h4 {
+                text-align: center;
+                font-size: 22px;
+                margin-bottom: 20px;
+            }
+
+            .login-form .small {
+                font-size: 13px;
+            }
+
+            .login-form .small {
+                font-size: 13px;
+            }
+
+            .login-form form {
+                color: #434343;
+                border-radius: 1px;
+                margin-bottom: 15px;
+                background: #fff;
+                border: 1px solid #f3f3f3;
+                box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+                padding: 30px;
+            }
+
+            .login-form .btn, .login-form .btn:active {
+                background: #2FA4E7 !important;
+                border: none;
+                line-height: normal;
+            }
+
+    </style>
+
+</head>
+<body style="background:whitesmoke">
+    <div id="app-login" class="login-form">
+        <form>
+            <br />
+            <div style="text-align:center"><img src="/img/sd.png" /></div>
+            <br /> <br />
+            <h4 style="font-size: 17px;font-weight: 600; color: #418465">Searchable Design Assigment<br />(Log in Dashboard)</h4>
+            <br />
+
+            <div class="form-group">
+                <input type="text" v-model="item.usercode"  class="form-control " placeholder="User Name(Enter Admin)" />
+                <span class="error"> User Code is Required!</span>
+            </div>
+
+            <div class="form-group">
+                <input type="password" v-model="item.password" class="form-control" placeholder="Password (Enter Admin)"  />
+            </div>
+            <br />
+
+            <button type="button" v-on:click="loginUser()" style="background-color:#4aba70 !important" class="btn btn-primary btn-block btn-lg" value="Login"><i class="fa fa-sign-in"></i> &nbsp;Login</button>
+        </form>
+        <div class="text-center small"></div>
+    </div>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>
+
+<script type="text/javascript">
+    var vm = new Vue({
+        el: '#app-login',
+        components: {
+        },
+        data: {
+            ui: {
+                success: '',
+                error: '',
+            },
+            item: {
+                usercode: '',
+                password: '',
+            },
+            
+        },
+        created: function () {
+
+        },
+        methods: {
+            loginUser: function () {
+                $.ajax({
+                    method: "POST",
+                    url: "/Home/Login",
+                    data: { usercode: this.item.usercode, password: this.item.password },
+                }).done(function (response) {
+                    if (response.success == true) {
+                        var returnUrl = getReturnURL();
+                        if (returnUrl != '' && returnUrl != null) {
+                            window.location.href = returnUrl;
+                        }
+                        else if (response.redirection_url) {
+                            window.location.replace("/" + response.redirection_url);
+                        }
+                        else {
+                            window.location.href = "/Home/Index";
+                        }
+                        success(response.message);
+                    } else {
+                        warning(response.message);
+                    }
+                    
+                    
+                }).fail(function (xhr, status, error) {
+                    
+                    error_msg(error);
+                    
+                })
+            }
+        },
+        computed: {
+            
+
+        },
+    });
+</script>

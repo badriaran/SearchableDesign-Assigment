@@ -1,39 +1,89 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SearchableDesign</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/SearchableDesign.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link href="~/lib/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
-    <link href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" rel="stylesheet" />
+    @RenderSection("Scripts", required: false)
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/site.js"></script>
+
     <script src="~/js/vuejs/vue.js"></script>
+    <script src="~/js/vuejs/vue.min.js"></script>
+    <script src="~/js/vuejs/vuejs_paginate.js"></script>
     <script src="~/js/vuejs/vue-resource.min.js"></script>
-    
+
+    <script src="~/js/custom/customerscript.js"></script>
+    <link href="~/js/custom/blockui.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="~/css/general.css" rel="stylesheet" />
+    <link href="~/css/bootstrap.css" rel="stylesheet" />
+    <link href="~/css/bootstrap.min.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+ 
+    <link href="~/css/customnavigation.css" rel="stylesheet" />
+    <script src="~/notification/jquery.growl.js"></script>
+    <link href="~/js/jquery.growl.css" rel="stylesheet" />
+    @*<script src="~/js/jquery-3.4.1.intellisense.js"></script>*@
+
+    <script type="text/javascript">
+        function success(message) {
+            $.growl.notice({ message: message, duration: 2000, size: 'large' });
+        }
+        function error_msg(error) {
+            $.growl.error({ message: error, duration: 2000, size: 'large' });
+        }
+        function warning(error) {
+            $.growl.warning({ message: error, duration: 2000, size: 'large' });
+        }
+        function getReturnURL() {
+            var name = "ReturnURL";
+            var url = window.location.href.toLowerCase();
+            name = name.replace(/[\[\]]/g, '\\$&').toLowerCase();
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+        
+    </script>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">SearchableDesign</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <img src="/img/sd.png" style="height:25px; margin-top:18px; margin-right:10px;" />
+                        </li>
+                        @*<li class="nav-item">
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>*@
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-area="" asp-controller="Employee" asp-action="Index">UploadFile</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-white" asp-area="" asp-controller="ManageEmployee" asp-action="Index">ManageEmployee</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Employee" asp-action="UploadEmployee">Upload Employee</a>
+                            <a class="nav-link text-white" asp-area="" asp-controller="APIData" asp-action="Index">APIData</a>
                         </li>
+                    </ul>
+                    <ul class=" navbar-nav navbar-right">
+                        @if (@Context.Session.GetString("usercode") != "admin")
+                        {
+                            <li class="nav-item"><a><i class="fa fa-user fa-fw text-white"></i> Welcome @Context.Session.GetString("usercode") ! |</a> </li>
+                            <li class="nav-item"><a href="/Home/LogOff"><i class="fa fa-sign-out text-white"></i> Log off |</a></li>
+                            <li class="nav-item"><a href=""><i class="fa fa-clock-o text-white"></i> @Context.Session.GetString("usercode") </a></li>
+                        }
                     </ul>
                 </div>
             </div>
@@ -45,14 +95,17 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
+    <footer class="border-top footer text-muted text-center" style="position:fixed; text-align: center;">
+        <div class="container footer">
             &copy; 2024 - SearchableDesign -Assigment
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @*<script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>*@
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+   @* <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>*@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

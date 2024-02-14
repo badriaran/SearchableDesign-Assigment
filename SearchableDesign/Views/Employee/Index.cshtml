@@ -1,1 +1,225 @@
-﻿<h1>This is employee index page</h1>
+﻿<div id="upload-employee">
+    <div class="row bg-title">
+        <div class="col-lg-8 col-md-6 col-sm-6 col-xs-12">
+            <h4 class="page-title" style="cursor: s-resize;">
+                <span>Upload Employee</span>
+                <img src="~/img/refreshing.gif" v-if="ui.is_loading" />
+            </h4>
+        </div>
+
+        <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
+            <ul class="nav nav-pills pull-right" role="tablist">
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="nav-link bg-primary text-white" v-on:click="showModal()">Create New</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div id="userUploadModal" class="modal fade in bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" >
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myLargeModalLabel">Upload</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="file" id="fileName" style="cursor:pointer" v-on:change="onFileChange($event)" />
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-success" id="btn_save_excel" v-on:click="uploadExcel()" v-if="ui.save_btn">Save</button>
+                            <span v-if="ui.is_saving" style="color:green">Saving..... </span>
+                            <button type="button" class="btn btn-primary" onclick="TemplateDownload()">Download Template</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body" style=" overflow-x: scroll;" v-if="ui.flag_table">
+                    <table class="table table-striped dataTable table-hover">
+                        <colgroup></colgroup>
+                        <thead>
+                            <tr>
+                                <th>Error Status</th>
+                                <th>S.No.</th>
+                                <th>Employee Full Name</th>
+                                <th>Date Of Birth</th>
+                                <th>Gender</th>
+                                <th style="text-align:center">Salary</th>
+                                <th>Designation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item, key) in master.employee_lists" :key="key" :class="item.statusClass">
+                                <td v-html="item.statusMsg"></td>
+                                <td>{{item.sn}}</td>
+                                <td>{{item.fullName}}</td>
+                                <td>{{item.dob}}</td>
+                                <td>{{item.gender}}</td>
+                                <td>{{item.salary}}</td>
+                                <td>{{item.designation}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <span v-for="item in master.row_skipped">
+                        skip row: {{item}}
+                    </span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success waves-effect text-left" v-on:click="onClickSave()" v-if="ui.save_flag">Save</button>
+                    <button type="button" class="btn btn-danger waves-effect text-left" v-on:click="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: '#upload-employee',
+        components: {
+
+        },
+        data: {
+            page: {
+                Document: '',
+                DocumentName: '',
+                DocumentType: '',
+                DocumentSize: 0,
+            },
+            ui: {
+                is_loading: false,
+                is_saving: false,
+                is_exporting: false,
+                is_downloading:false,
+
+                save_btn:true,
+                save_flag:false,
+                flag_table:false,
+            },
+            item: {
+
+            },
+            master: {
+                employee_lists:[],
+                row_skipped:{},
+            },
+
+        },
+        created: function () {
+
+        },
+        methods: {
+            showModal: function () {
+                $("#userUploadModal").modal('show');
+            },
+            closeModal: function () {
+                 this.reset()
+                $("#userUploadModal").modal('hide');
+            },
+            reset: function () {
+                this.page.Document='';
+                this.page.DocumentName='';
+                this.page.DocumentType='';
+                this.page.DocumentSize='';
+                this.ui.flag_table = false;
+                this.ui.save_flag=false;
+
+                this.ui.save_btn=true;
+                this.clearForm();
+            },
+            clearForm: function () {
+                $("#fileName").val(null);
+                this.page.Document = '';
+                this.page.DocumentName = '';
+                this.page.DocumentType = '';
+                this.page.DocumentSize = 0;
+            },
+            onFileChange: function (event) {
+                var files = event.target.files || event.dataTransfer.files;
+                if (!files.length)
+                    return;
+                this.page.DocumentName = files[0].name;
+                this.page.DocumentSize = files[0].size;
+                this.page.DocumentType = files[0].type;
+                var that = this;
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    vm.page.Document = e.target.result;
+                };
+                reader.readAsDataURL(files[0]);
+            },
+            uploadExcel: function () {
+                var fileExtension = ['xlsx', 'csv'];
+                var filename = $('#fileName').val();
+                var extension = filename.replace(/^.*\./, '');
+                if (this.page.DocumentName.trim() == '') {
+                    error_msg('Please upload file before proceeding.');
+                    return;
+                }
+                if ($.inArray(extension, fileExtension) == -1) {
+                    error_msg("Please select only .xlsx .csv files.");
+                    return false;
+                }
+
+                if (this.ui.is_uploading) {
+                    return;
+                }
+                this.ui.is_uploading = true;
+                $.ajax({
+                    method: "POST",
+                    url: "/Employee/UploadFile",
+                    data: this.page,
+                }).done(function (response) {
+                    if (response.success == true) {
+                        success("File uploaded successfully.");
+                        vm.master.employee_lists=response.result;
+                        vm.master.row_skipped = response.result2;
+                        vm.ui.save_flag = response.result3;
+                        console.log(vm.ui.save_flag);
+                        vm.ui.flag_table=true;
+                        vm.ui.save_btn=false;
+                    } else {
+                        error_msg(response.message);
+                    }
+                    vm.ui.is_uploading = false;
+                }).fail(function (xhr, status, error) {
+                    vm.ui.is_uploading = false;
+                    error_msg(error);
+                })
+            },
+            onClickSave:function(){
+                if (this.ui.is_uploading) {
+                    return;
+                }
+                this.ui.is_uploading = true;
+                console.log(this.master.employee_lists);
+                $.ajax({
+                    method: "POST",
+                    url: "/Employee/SaveUploadData",
+                    data: {model:this.master.employee_lists},
+                }).done(function (response) {
+                    if (response.success == true) {
+                        success("File saved successfully.");
+                        vm.closeModal();
+                        //window.location = "/Employee/Index";                       
+                    } else {
+                        error_msg(response.message);
+                    }
+                    vm.ui.is_uploading = false;
+                }).fail(function (xhr, status, error) {
+                    vm.ui.is_uploading = false;
+                    error_msg(error);
+                })
+            },
+        },
+        computed: {
+
+        }
+    });
+
+    function TemplateDownload() {
+        var fileUrl = "/Employee/DownloadTemplate";
+        window.location.replace(fileUrl);
+
+    }
+</script>
+

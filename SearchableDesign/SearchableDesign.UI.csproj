@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\Images\**" />
+    <Content Remove="wwwroot\Images\**" />
+    <EmbeddedResource Remove="wwwroot\Images\**" />
+    <None Remove="wwwroot\Images\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SearchableDesign.BusinessLogicLayer\SearchableDesign.Repository.csproj" />
     <ProjectReference Include="..\SearchableDesign.DataAccessLayer\SearchableDesign.Infrastructure.csproj" />
     <ProjectReference Include="..\SearchableDesign.Domain\SearchableDesign.Domain.csproj" />
@@ -14,12 +21,16 @@
 
   <ItemGroup>
     <Folder Include="UploadedFiles\" />
-    <Folder Include="ViewModels\" />
-    <Folder Include="wwwroot\Images\" />
+    <Folder Include="wwwroot\css\" />
     <Folder Include="wwwroot\pdf\" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\img\user.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EPPlus" Version="7.0.8" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.16" />
   </ItemGroup>
 

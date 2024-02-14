@@ -1,0 +1,492 @@
+﻿<div id="manage-employee">
+    <div class="row bg-title">
+        <div class="col-lg-8 col-md-6 col-sm-6 col-xs-12">
+            <h4 class="page-title" style="cursor: s-resize;">
+                <span>Manage Employee</span>
+                <img src="~/img/refreshing.gif" v-if="ui.is_loading" />
+            </h4>
+        </div>
+        <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
+            <ul class="nav nav-pills pull-right" role="tablist">
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="nav-link bg-primary navbar-light text-white" v-on:click="showModal()">Add New</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="control-label col-md-5">Imported Date:</label>
+                    <div class="col-md-7">
+                        <input type="date" class="form-control" v-model="search.UploadedDate" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <button type="button" :disabled="ui.is_loading==true" class="btn btn-primary btn-sm" v-on:click="onSearchClick()">
+                    {{ui.is_loading==true? 'Searching...':'Search'}}
+                </button>
+                <button :disable="ui.is_exporting==true" type="button" :disabled="ui.is_exporting==true" class="btn btn-success btn-sm" v-on:click="onExportClick()">
+                    {{ui.is_exporting==true? 'Exporting...':'Export To Excel'}}
+                </button>
+                <button :disable="ui.is_exporting==true" type="button" :disabled="ui.is_exporting==true" class="btn btn-success btn-sm" v-on:click="onExportClick()">
+                    {{ui.is_exporting==true? 'Exporting...':'Export To CSV'}}
+                </button>
+            </div>
+            <div class="col-md-4">
+                <button :disable="ui.is_printing==true" type="button" :disabled="ui.is_printing==true" class="btn btn-primary btn-sm" style="float: right;" onclick="printContent('divtoprint');">
+                    {{ui.is_printing==true? 'Printing...':'Print'}}
+                </button>
+            </div>
+        </div>
+    </div><br />
+    <div class="container" >
+        <div class="row">
+            <table class="table table-bordered table-responsive" id="divtoprint">
+                <thead class="bg-primary text-white">
+                    <tr>                    
+                        <th>Profile</th>
+                        <th>Full Name</th>
+                        <th>Birth of Date</th>
+                        <th>Gender</th>
+                        <th>Salary</th>
+                        <th>Designation</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tr v-for="(item, key) in master.employee_lists" :key="key">
+                    <td><img :src="item.profileImagePath" alt="user" height="30" class="rounded-circle" /></td>
+                    <td>{{item.fullName}}</td>
+                    <td>{{item.dob}}</td>
+                    <td>{{item.salary}}</td>
+                    <td>{{item.gender}}</td>
+                    <td>{{item.designation}}</td>
+                    <td>
+                        <a href="javascript:void(0)" v-on:click="onEditClick(item)"><i class="fa fa-edit"></i>Edit</a>
+                        |&nbsp;<a href="javascript:void(0)" v-on:click="onDeleteClick(item.id)">Delete</a>
+                    </td>
+                </tr>
+            </table>
+            <div class="row mt-1">
+                <div class="col-sm-6">
+                    <p class="no-data">{{showingMToNOfXPages}}</p>
+                </div>
+                <div class="col-sm-6">
+                    <div class="vue-pagination-wrap text-sm-right">
+                        <paginate :page-count="paginationNoOfPages"
+                                  :click-handler="onNewPageClicked"
+                                  :prev-text="'Prev'"
+                                  :next-text="'Next'"
+                                  v-model="search.CurrentPage"
+                                  :container-class="'pagination m-0'">
+                        </paginate>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>  
+   <div id="userUploadModal" class="modal fade in bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title text-center"> {{item.Flag=='U'? 'Update Employee Information':'Add New Employee'}}</h4>
+                   @* <button type="button" class="close" v-on:click="closeModal()">&times;</button>*@                  
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label class="control-label col-md-4">FullName</label>
+                            <div class="col-md-8">
+                                <input v-model="item.FullName" class="form-control" placeholder="Enter Employee Name" />
+                                <span v-if="validation.FullName" class="error"> {{validation.FullName}}</span>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label class="control-label col-md-4">Birth of Date</label>
+                            <div class="col-md-8">
+                                <input v-model="item.DOB" type="date" class="form-control" />
+                                <span v-if="validation.DOB" class="error"> {{validation.DOB}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label class="control-label col-md-4">Gender</label>
+                            <div class="col-md-7">
+                                <select class="form-control input-sm" v-model="item.Gender">
+                                    <option value="" selected>-Select Gender-</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                                <span v-if="validation.Gender" class="error"> {{validation.Gender}}</span>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label class="control-label col-md-4">Salary</label>
+                            <div class="col-md-8">
+                                <input v-model="item.Salary" type="number" class="form-control" placeholder="Enter Salary" />
+                                <span v-if="validation.Salary" class="error"> {{validation.Salary}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label class="control-label col-md-4">Designation </label>
+                            <div class="col-md-8">
+                                <input v-model="item.Designation" type="text" class="form-control" placeholder="Enter Designation's" />
+                                <span v-if="validation.Designation" class="error"> {{validation.Designation}}</span>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label class="control-label col-md-4">Profile Image</label>
+                            <div class="col-md-8">
+                                <input type="file" id="file_id" class="form-control" style="cursor:pointer" v-on:change="onFileChange($event)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button v-if="item.Flag=='N' " :disabled="ui.is_saving==true" class="btn btn-primary rounded-0" v-on:click="saveNewEmployee()">Save</button>
+                    <button v-if="item.Flag=='U' " :disabled="ui.is_saving==true" class="btn btn-primary rounded-0" v-on:click="updateEmployee()">Save Changes</button>
+                    <img src="~/img/refreshing.gif" v-if="ui.is_saving" />
+                    <button type="button" class="btn btn-default" v-on:click="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    Vue.component('paginate', VuejsPaginate);
+    var vm = new Vue({
+        el: '#manage-employee',
+        components: {
+
+        },
+        data: {
+            ui: {
+                is_loading: false,
+                is_saving: false,
+                is_exporting: false,
+                is_printing:false,
+            },
+            ProfileImage: {
+                Image: '',
+                ImageName: '',
+                ImageType: '',
+                ImageSize: 0,
+            },
+            item: {
+                Id:'',
+                FullName:'',
+                Id:'',
+                DOB:'',
+                Salary:'',
+                Gender:'',
+                Designation:'',
+
+                Flag:'N'
+            },
+            master: {
+                employee_lists: [],
+            },
+            search: {
+                UploadedDate: '',
+
+                CurrentPage: 1,
+                PerPage: 10,
+                Total: 0
+            },
+            validation:{
+                FullName: '',
+                DOB: '',
+                Salary: '',
+                Gender: '',
+                Designation: '',
+            }
+        },
+        created: function () {
+            this.getEmployeeLists();
+        },
+        methods: {
+            onFileChange:function(event) {
+                var files = event.target.files || event.dataTransfer.files;
+                if (!files.length)
+                    return;
+                this.ProfileImage.ImageName = files[0].name;
+                this.ProfileImage.ImageSize = files[0].size;
+                this.ProfileImage.ImageType = files[0].type;
+                var that = this;
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    vm.ProfileImage.Image = e.target.result;
+                };
+                reader.readAsDataURL(files[0]);
+                console.log(this.ProfileImage)
+            },
+            showModal:function(){
+                $("#userUploadModal").modal('show');
+            },
+            closeModal: function () {
+                this.reset()
+                $("#userUploadModal").modal('hide');
+            },
+            onDeleteClick: function (id) {
+                console.log(id);
+                if (confirm("Are you sure want to delete this Employee ?")) {
+                    $.ajax({
+                        method: "POST",
+                        //contentType: "application/json; charset=utf-8",
+                        url: "/ManageEmployee/Delete",
+                        data: { Id: id },
+                    }).done(function (response) {
+                        if (response.success) {
+                            const itemIndex = vm.master.employee_lists.findIndex(x => x.id == id);
+                            if (itemIndex !== -1) {
+                                vm.master.employee_lists.splice(itemIndex, 1);
+                                vm.search.Total = parseInt(vm.search.Total) - 1;
+                                success(response.result);
+                            }
+                        } else {
+                            warning(response.message);
+                        }
+                    }).fail(function (xhr, status, error) {
+                        error_msg(error);
+                    })
+                }
+            },
+            onNewPageClicked: function (page) {
+                this.search.CurrentPage = page;
+                this.getEmployeeLists();
+            },
+            onSearchClick:function(){
+                this.search.CurrentPage = 1;
+                this.getEmployeeLists();
+            },
+            saveNewEmployee:function(){
+                var fileExtension = ['jpg', 'png'];
+                var filename = $('#file_id').val();
+                if (filename.length == 0) {
+                    alert("Please select a file.");
+                    return false;
+                }
+                else {
+                    var extension = filename.replace(/^.*\./, '');
+                    if ($.inArray(extension, fileExtension) == -1) {
+                        error_msg("Please select only .jpg .png files.");
+                        return false;
+                    }
+                }
+                //if (filename.length > 4194304){
+                //    error_msg("Please select less than 4MB .jpg .png files.");
+                //    return false;
+                //}
+                if (this.ui.is_saving) return;
+                this.validateForm();
+                if (!this.isFormValidForAdd) return;
+                this.ui.is_saving = true;
+                $.ajax({
+                    method: "POST",
+                    url: "/ManageEmployee/AddNewEmployee",
+                    data: {img:this.ProfileImage, model:this.item},
+                }).done(function (response){
+                    if (response.success == true) {
+                        vm.closeModal();
+                        vm.search.Total = parseInt(vm.search.Total) + 1;
+                        success(response.message);
+                    } else {
+                        warning(response.message);
+                    }
+                    vm.ui.is_saving = false;
+                    vm.getEmployeeLists();
+                }).fail(function (xhr, status, error) {
+                    vm.ui.is_saving = false;
+                    error_msg(error);
+                })
+            },
+            getEmployeeLists:function(){
+                if (this.ui.is_loading == true) return;
+                var vm = this;
+                this.ui.is_loading = true;
+                $.ajax({
+                    method: "GET",
+                    url: "/ManageEmployee/GetEmployees",
+                    data: this.search,
+                }).done(function (response) {
+                    if (response.success == true) {
+                        vm.master.employee_lists = response.result;
+                        console.log(vm.master.employee_lists);
+                        vm.search.Total = response.result2;
+                        vm.ui.is_loading = false;
+                    } else {
+                        vm.ui.is_loading = false;
+                        error_msg(response.message);
+                    }
+                }).fail(function (xhr, status, error) {
+                    vm.ui.is_loading = false;
+                    error_msg(error);
+                    
+                })
+            },
+            onExportClick: function () {
+                if (this.ui.is_exporting) return;
+                this.ui.is_exporting = true;
+                $.ajax({
+                    method: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    url: "/ManageEmployee/ExportToExcel",
+                    data: JSON.stringify(this.search),
+                }).done(function (response) {
+                    if (response.success == true) {
+                        vm.ui.is_exporting = false;
+                        window.location = '/ManageEmployee/Download';
+                    } else {
+                        vm.ui.is_exporting = false;
+                        error_msg(response.message);
+                    }
+                    vm.ui.is_exporting = false;
+                }).fail(function (xhr, status, error) {
+                    error_msg(error);
+                    vm.ui.is_exporting = false;
+                })
+            },
+            reset:function(){
+                this.item.Id='',
+                this.item.FullName = '';
+                this.item.DOB = '';
+                this.item.Salary = '';
+                this.item.Gender = '';
+                this.item.CitizenshipNumber = '';
+                this.item.Designation = '';
+                this.item.Flag = 'N';
+                this.resetValidation();
+                this.clearForm();
+            },
+            clearForm:function(){
+                this.ProfileImage.Image='';
+                this.ProfileImage.ImageName='';
+                this.ProfileImage.ImageType = '';
+                this.ProfileImage.ImageSize = 0;
+            },
+            resetValidation:function(){
+                this.validation.FullName = '';
+                this.validation.DOB = '';
+                this.validation.Salary = '';
+                this.validation.Gender = '';
+                this.validation.CitizenshipNumber = '';
+                this.validation.Designation = '';
+            },
+            validateForm:function(){
+                if (this.item.FullName == '') {
+                    this.validation.FullName = 'Fullname is required.';
+                } else {
+                    this.validation.FullName = '';
+                }
+                if (this.item.DOB == '') {
+                    this.validation.DOB = 'DOB is required.';
+                } else {
+                    this.validation.DOB = '';
+                }
+                if (this.item.Salary == '') {
+                    this.validation.Salary = 'Salary is required.';
+                } else {
+                    this.validation.Salary = '';
+                }
+                if (this.item.Gender == '') {
+                    this.validation.Gender = 'Gender is required';
+                } else {
+                    this.validation.Gender = '';
+                }
+                if (this.item.CitizenshipNumber == '') {
+                    this.validation.CitizenshipNumber = 'Citizenship is required.';
+                } else {
+                    this.validation.CitizenshipNumber = '';
+                }
+                if (this.item.Designation == '') {
+                    this.validation.Designation = 'Designation is required';
+                } else {
+                    this.validation.Designation = '';
+                }
+            },
+            onEditClick: function (item) {
+                this.item.Id = item.id;
+                this.item.FullName = item.fullName;
+                this.item.DOB = item.dob;
+                this.item.Salary = item.salary;
+                this.item.Gender = item.gender;
+                this.item.Designation = item.designation;
+                this.item.Flag = 'U';
+                this.showModal();
+            },
+            updateEmployee:function(){
+                var fileExtension = ['jpg', 'png'];
+                var filename = $('#file_id').val();
+                var extension = filename.replace(/^.*\./, '');
+                if ($.inArray(extension, fileExtension) == -1) {
+                    error_msg("Please select only .jpg .png files.");
+                    return false;
+                }                
+                if (this.ui.is_saving) return;
+                this.validateForm();
+                if (!this.isFormValidForAdd) return;
+                this.ui.is_saving = true;
+                $.ajax({
+                    method: "POST",
+                    url: "/ManageEmployee/UpdateEmployee",
+                    data: { img: this.ProfileImage, model: this.item },
+                }).done(function (response) {
+                    if (response.success == true) {
+                        vm.closeModal();
+                        vm.search.Total = parseInt(vm.search.Total) + 1;
+                        success(response.message);
+                    } else {
+                        warning(response.message);
+                    }
+                    vm.ui.is_saving = false;
+                    vm.getEmployeeLists();
+                }).fail(function (xhr, status, error) {
+                    vm.ui.is_saving = false;
+                    error_msg(error);
+                })
+            }
+        },
+        computed: {
+            isFormValidForAdd: function () {
+                if (this.validation.FullName == '' && this.validation.DOB == '' && this.validation.Salary == '' && this.validation.Gender == '' && this.validation.CitizenshipNumber == '' && this.validation.Designation == '') {
+                    return true;
+                } else {
+                    return false;
+                }
+            },
+            paginationNoOfPages: function () {
+                var mod = this.search.Total % this.search.PerPage;
+                var count = parseInt(this.search.Total / this.search.PerPage);
+                if (mod == 0) return count;
+                else return count + 1;
+            },
+            showingMToNOfXPages: function () {
+                if (this.search.Total == 0) return "No record found";
+                var M = (this.search.CurrentPage - 1) * this.search.PerPage + 1;
+                var N = this.search.CurrentPage * this.search.PerPage;
+                if (N > this.search.Total) N = this.search.Total;
+                var X = this.search.Total;
+                return "Showing " + M + " to " + N + " of " + X + " records";
+            },
+        }
+    })
+
+</script>
+
+<script>
+    function printContent(el) {
+        var restorepage = $('body').html();
+        var printcontent = $('#' + el).clone();
+        
+        $('body').empty().html(printcontent);
+        $('title').empty();
+        window.print();
+        $('body').html(restorepage);
+        window.location="/ManageEmployee/Index";
+    }
+</script>

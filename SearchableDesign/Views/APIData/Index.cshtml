@@ -1,0 +1,155 @@
+﻿<div id="upload-employee">
+    <div class="row bg-title">
+        <div class="col-lg-8 col-md-6 col-sm-6 col-xs-12">
+            <h4 class="page-title" style="cursor: s-resize;">
+                <span>Get API Data</span>
+                <img src="~/img/refreshing.gif" v-if="ui.is_loading" />
+            </h4>
+        </div>
+
+        <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
+            <ul class="nav nav-pills pull-right" role="tablist">
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="nav-link bg-primary text-white" v-on:click="onFetchClick()">Fetch Data</a>
+                    <img src="~/img/refreshing.gif" v-if="ui.is_loading" />
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <table class="table table-bordered table-responsive">
+                <thead class="bg-primary text-white">
+                    <tr>
+                        <th>Id</th>
+                        <th>Employee Name</th>
+                        <th>Employee Salary</th>
+                        <th>Employee Age</th>
+                        <th>Profile Image</th>
+
+                    </tr>
+                </thead>
+                <tr v-for="(item, key) in master.data_lists" :key="key">
+                    <td>{{item.id}}</td>
+                    <td>{{item.employee_name}}</td>
+                    <td>{{item.employee_salary}}</td>
+                    <td>{{item.employee_age}}</td>
+                    <td><img :src="item.profile_image" alt="user" height="30" class="rounded-circle" /></td>
+                </tr>
+            </table>
+            <div class="row mt-1">
+                <div class="col-sm-6">
+                    <p class="no-data">{{showingMToNOfXPages}}</p>
+                </div>
+                <div class="col-sm-6">
+                    <div class="vue-pagination-wrap text-sm-right">
+                        <paginate :page-count="paginationNoOfPages"
+                                  :click-handler="onNewPageClicked"
+                                  :prev-text="'Prev'"
+                                  :next-text="'Next'"
+                                  v-model="search.CurrentPage"
+                                  :container-class="'pagination m-0'">
+                        </paginate>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    Vue.component('paginate', VuejsPaginate);
+    var vm = new Vue({
+        el: '#upload-employee',
+        components: {
+
+        },
+        data: {
+            ui: {
+                is_loading: false,
+                is_saving: false,
+                is_exporting: false,
+                is_downloading: false,
+            },
+            item: {
+                id: '',
+            },
+            master: {
+                data_lists: [],
+                data_lists_total: {},
+            },
+            search: {
+                CurrentPage: 1,
+                PerPage: 10,
+                Total: 0
+            },
+
+        },
+        created: function () {
+            //this.onFetchClick();
+        },
+        methods: {
+            onFetchClick: function () {
+                this.ui.is_loading = true;
+                $.ajax({
+                    method: "GET",
+                    url: "/APIData/GetData",
+                    data:{pageNo: this.search.CurrentPage},
+                }).done(function (response) {
+                    if (response.success == true) {
+                        vm.master.data_lists_total = response.result;
+                        vm.master.data_lists = response.result3;
+                        vm.search.Total = response.result2;
+                        success(response.message);
+                    } else {
+                        error_msg(response.message);
+                    }
+                    vm.ui.is_loading = false;
+                }).fail(function (xhr, status, error) {
+                    vm.ui.is_loading = false;
+                    error_msg(error);
+                })
+            },
+            onNextClick: function () {
+                this.ui.is_loading = true;
+                console.log(this.master.data_lists_total);
+                $.ajax({
+                    method: "POST",
+                    url: "/APIData/GetDataWithPagination",
+                    data: { pageNo: this.search.CurrentPage, list: this.master.data_lists_total },
+                }).done(function (response) {
+                    if (response.success == true) {
+                        vm.master.data_lists = response.result;
+                        vm.search.Total = response.result2;
+                    } else {
+                        error_msg(response.message);
+                    }
+                    vm.ui.is_loading = false;
+                }).fail(function (xhr, status, error) {
+                    vm.ui.is_loading = false;
+                    error_msg(error);
+                })
+            },
+
+            onNewPageClicked: function (page) {
+                this.search.CurrentPage = page;
+                this.onNextClick();
+            },
+        },
+        computed: {
+            paginationNoOfPages: function () {
+                var mod = this.search.Total % this.search.PerPage;
+                var count = parseInt(this.search.Total / this.search.PerPage);
+                if (mod == 0) return count;
+                else return count + 1;
+            },
+            showingMToNOfXPages: function () {
+                if (this.search.Total == 0) return "No record found";
+                var M = (this.search.CurrentPage - 1) * this.search.PerPage + 1;
+                var N = this.search.CurrentPage * this.search.PerPage;
+                if (N > this.search.Total) N = this.search.Total;
+                var X = this.search.Total;
+                return "Showing " + M + " to " + N + " of " + X + " records";
+            },
+        }
+    });
+</script>
