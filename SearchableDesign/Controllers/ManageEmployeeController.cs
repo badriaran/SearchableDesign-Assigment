@@ -7,6 +7,7 @@ using SearchableDesign.Repository.Repository.ManageEmployees;
 using SearchableDesign.Repository.ViewModels;
 using SearchableDesign.UI.Models;
 using System.Data;
+using System.Reflection;
 using System.Text;
 
 namespace SearchableDesign.UI.Controllers
@@ -92,7 +93,7 @@ namespace SearchableDesign.UI.Controllers
             {
                 _httpContextAccessor.HttpContext.Session.Remove("ExcelReport");
 
-                string fileName = "EmployeeLists" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".csv";
+                string fileName = "EmployeeLists" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".xlsx";
                 return File(data, "application/octet-stream", fileName);
 
             }
@@ -197,5 +198,6 @@ namespace SearchableDesign.UI.Controllers
             }
             return Json(json);
         }
+       
     }
 }

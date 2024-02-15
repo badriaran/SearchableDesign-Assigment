@@ -35,7 +35,7 @@
                     {{ui.is_exporting==true? 'Exporting...':'Export To CSV'}}
                 </button>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-4">               
                 <button :disable="ui.is_printing==true" type="button" :disabled="ui.is_printing==true" class="btn btn-primary btn-sm" style="float: right;" onclick="printContent('divtoprint');">
                     {{ui.is_printing==true? 'Printing...':'Print'}}
                 </button>
@@ -60,8 +60,8 @@
                     <td><img :src="item.profileImagePath" alt="user" height="30" class="rounded-circle" /></td>
                     <td>{{item.fullName}}</td>
                     <td>{{item.dob}}</td>
-                    <td>{{item.salary}}</td>
                     <td>{{item.gender}}</td>
+                    <td>{{item.salary}}</td>
                     <td>{{item.designation}}</td>
                     <td>
                         <a href="javascript:void(0)" v-on:click="onEditClick(item)"><i class="fa fa-edit"></i>Edit</a>
@@ -170,6 +170,7 @@
                 is_saving: false,
                 is_exporting: false,
                 is_printing:false,
+                
             },
             ProfileImage: {
                 Image: '',
@@ -351,6 +352,7 @@
                     vm.ui.is_exporting = false;
                 })
             },
+            
             reset:function(){
                 this.item.Id='',
                 this.item.FullName = '';
