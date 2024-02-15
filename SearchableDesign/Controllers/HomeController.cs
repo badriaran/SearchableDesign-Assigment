@@ -42,7 +42,7 @@ namespace SearchableDesign.UI.Controllers
                     if (user.Status == "SUCCESS")
                     {
                         _HttpContextAccessor.HttpContext.Session.SetString("UserCode", usercode);
-                        
+                       
                         //var UserCode = Context.Session.GetString("UserCode");
                         json.Message = user.Message;
                         json.Success = true;
